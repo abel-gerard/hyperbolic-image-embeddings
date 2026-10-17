@@ -2,6 +2,12 @@ from __future__ import print_function
 
 import argparse
 
+import os
+
+data_path = "../mnist_data"
+if os.getenv("GLOBALSCRATCH") is not None:
+    data_path = os.path.join(os.getenv("GLOBALSCRATCH"), "mnist_data")
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,6 +16,12 @@ from torchvision import datasets, transforms
 
 import hyptorch.nn as hypnn
 
+
+fix_mirror = 'https://ossci-datasets.s3.amazonaws.com/mnist'
+datasets.MNIST.urls = [
+    fix_mirror + '/' + md5
+    for _, md5 in (u.rsplit('/', 1) for u in datasets.MNIST.urls)
+]
 
 class Net(nn.Module):
     def __init__(self, args):
@@ -169,7 +181,7 @@ def main():
     kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
     train_loader = torch.utils.data.DataLoader(
         datasets.MNIST(
-            "../data",
+            data_path,
             train=True,
             download=True,
             transform=transforms.Compose(
@@ -182,7 +194,7 @@ def main():
     )
     test_loader = torch.utils.data.DataLoader(
         datasets.MNIST(
-            "../data",
+            data_path,
             train=False,
             transform=transforms.Compose(
                 [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
