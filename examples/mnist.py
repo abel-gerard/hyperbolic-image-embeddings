@@ -23,7 +23,7 @@ class Net(nn.Module):
         )
         self.mlr = hypnn.HyperbolicMLR(ball_dim=args.dim, n_classes=10, c=args.c)
 
-    def forward(self, x):
+    def embed(self, x):
         x = F.relu(self.conv1(x))
         x = F.max_pool2d(x, 2, 2)
         x = F.relu(self.conv2(x))
@@ -32,6 +32,10 @@ class Net(nn.Module):
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
         x = self.tp(x)
+        return x
+
+    def forward(self, x):
+        x = self.embed(x)
         return F.log_softmax(self.mlr(x, c=self.tp.c), dim=-1)
 
 
@@ -196,9 +200,16 @@ def main():
         train(args, model, device, train_loader, optimizer, epoch)
         test(args, model, device, test_loader)
 
-    if args.save_model:
-        torch.save(model.state_dict(), "mnist_cnn.pt")
+        if args.save_model:            
+            import os
 
+            os.makedirs("checkpoints", exist_ok=True)
+            torch.save(model.state_dict(), f"checkpoints/mnist_cnn_{epoch}.pt")
+
+    if args.save_model:
+        import json
+        with open("args.json", "w") as f:
+                        json.dump(vars(args), f)
 
 if __name__ == "__main__":
     main()
