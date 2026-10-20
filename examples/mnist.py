@@ -212,7 +212,7 @@ def main():
         train(args, model, device, train_loader, optimizer, epoch)
         test(args, model, device, test_loader)
 
-        if args.save_model:            
+        if args.save_model:             
             import os
 
             os.makedirs("checkpoints", exist_ok=True)
@@ -220,7 +220,7 @@ def main():
 
     if args.save_model:
         import json
-        with open("args.json", "w") as f:
+        with open("mnist_args.json", "w") as f:
                         json.dump(vars(args), f)
 
 if __name__ == "__main__":

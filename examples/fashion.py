@@ -2,6 +2,12 @@ from __future__ import print_function
 
 import argparse
 
+import os
+
+data_path = "../fashion_data"
+if os.getenv("GLOBALSCRATCH") is not None:
+    data_path = os.path.join(os.getenv("GLOBALSCRATCH"), "fashion_data")
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -169,10 +175,9 @@ def main():
     device = torch.device("cuda" if use_cuda else "cpu")
 
     kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
-    fashion_data_root = "../data/fashion_mnist"
     train_loader = torch.utils.data.DataLoader(
         datasets.FashionMNIST(
-            fashion_data_root,
+            data_path,
             train=True,
             download=True,
             transform=transforms.Compose(
@@ -185,7 +190,7 @@ def main():
     )
     test_loader = torch.utils.data.DataLoader(
         datasets.FashionMNIST(
-            fashion_data_root,
+            data_path,
             train=False,
             transform=transforms.Compose(
                 [transforms.ToTensor()]
@@ -199,17 +204,9 @@ def main():
     model = Net(args).to(device)
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
-    import numpy as np
-    best_loss = np.inf
-    best_state = None
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
         loss = test(args, model, device, test_loader)
-
-        if loss < best_loss:
-            best_loss = loss
-            print("best so far:", loss)
-            best_state = model.state_dict()
 
         if args.save_model:            
             import os
@@ -221,8 +218,6 @@ def main():
         import json
         with open("fashion_args.json", "w") as f:
                         json.dump(vars(args), f)
-
-        torch.save(best_state, f"checkpoints/fashion_mnist_cnn_best.pt")
 
 if __name__ == "__main__":
     main()

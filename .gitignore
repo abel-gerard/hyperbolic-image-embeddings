@@ -1,12 +1,13 @@
 *.pyc
 /dist/
 /*.egg-info
+__pycache__
 .ipynb_checkpoints
 .DS_Store
 /build
 /data
 .idea
-data
+mnist_data
 results
 examples/fewshot/data/cub/images
 examples/fewshot/data/miniimagenet/images
