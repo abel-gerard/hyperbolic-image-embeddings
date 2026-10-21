@@ -17,3 +17,8 @@ CUB*
 examples/fewshot/saves
 
 *.pt
+*.json
+*.out
+hie-mnist
+exp_images
+checkpoints

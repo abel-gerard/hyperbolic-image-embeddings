@@ -1,19 +1,19 @@
 #!/bin/bash
-#SBATCH --job-name=mnist-hie
-#SBATCH --output=%j_mnist.out
-#SBATCH --error=%j_mnist.err
-#SBATCH --time=01:00:00
-#SBATCH --mem=16G
-#SBATCH --cpus-per-task=4
-
-#SBATCH --partition=batch
+#SBATCH --job-name=hie-mnist
+#SBATCH --output=hie-mnist-%j.out
+#SBATCH --partition=gpu
+#SBATCH --time=08:00:00
 #SBATCH --gpus=1
+#SBATCH --mem=8G
 
-module purge
+set -eu
+source "$HOME/miniconda3/etc/profile.d/conda.sh"
+conda activate "hie-mnist"
+cd examples
 
-source $HOME/miniconda3/etc/profile.d/conda.sh
-conda activate $GLOBALSCRATCH/hie-mnist
-python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+nvidia-smi
 
-cd $HOME/hyperbolic-image-embeddings/examples
-python -u mnist.py --epochs 10 --dim 2 --c 1.0 --save-model
+python mnist.py --epochs 30 --dim 2 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+python mnist.py --epochs 30 --dim 8 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+python mnist.py --epochs 30 --dim 16 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+python mnist.py --epochs 30 --dim 32 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
