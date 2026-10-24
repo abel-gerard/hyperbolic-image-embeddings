@@ -24,4 +24,7 @@ python mnist.py --epochs 50 --dim 3 --c 1.0 --lr 0.0003 --no-cuda --save-model
 
 ## TODO
 - [x] Reproduce the experiment on MNIST+Omniglot with [mnist.ipynb](examples/mnist.ipynb).
-- [ ] Use better color map for visualization 
+- [ ] Use better color map for visualization.
+- [ ] Compute $\delta_\text{rel}$.
+- [ ] Reproduce experiment on different dataset.
+- [ ] Explore classification with UMAP representation.
