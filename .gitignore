@@ -19,6 +19,9 @@ examples/fewshot/saves
 *.pt
 *.json
 *.out
+*.npy
+*.csv
 hie-mnist
 exp_images
 checkpoints
+mini-imagenet

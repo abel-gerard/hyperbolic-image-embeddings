@@ -13,7 +13,9 @@ cd examples
 
 nvidia-smi
 
-python mnist.py --epochs 30 --dim 2 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
-python mnist.py --epochs 30 --dim 8 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
-python mnist.py --epochs 30 --dim 16 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
-python mnist.py --epochs 30 --dim 32 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+python fashion.py --epochs 30 --dim 2 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+python fashion.py --epochs 30 --dim 3 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+# python mnist.py --epochs 30 --dim 2 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+# python mnist.py --epochs 30 --dim 8 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+# python mnist.py --epochs 30 --dim 16 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+# python mnist.py --epochs 30 --dim 32 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"

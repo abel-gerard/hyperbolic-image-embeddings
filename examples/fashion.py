@@ -3,6 +3,7 @@ from __future__ import print_function
 import argparse
 
 import os
+import json
 
 data_path = "../fashion_data"
 if os.getenv("GLOBALSCRATCH") is not None:
@@ -44,6 +45,28 @@ class Net(nn.Module):
         x = self.embed(x)
         return F.log_softmax(self.mlr(x, c=self.tp.c), dim=-1)
 
+class EuclideanNet(nn.Module):
+    def __init__(self, args):
+        super(EuclideanNet, self).__init__()
+        self.conv1 = nn.Conv2d(1, 20, 5, 1)
+        self.conv2 = nn.Conv2d(20, 50, 5, 1)
+        self.fc1 = nn.Linear(4 * 4 * 50, 500)
+        self.fc2 = nn.Linear(500, args.dim)
+        self.classifier = nn.Linear(args.dim, 10)
+
+    def embed(self, x):
+        x = F.relu(self.conv1(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = F.relu(self.conv2(x))
+        x = F.max_pool2d(x, 2, 2)
+        x = x.view(-1, 4 * 4 * 50)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
+    def forward(self, x):
+        x = self.embed(x)
+        return F.log_softmax(self.classifier(x), dim=-1)
 
 def train(args, model, device, train_loader, optimizer, epoch):
     model.train()
@@ -93,12 +116,13 @@ def test(args, model, device, test_loader):
         )
     )
 
-    return test_loss
+    score = correct / len(test_loader.dataset)
+    return test_loss, score
 
 
 def main():
     # Training settings
-    parser = argparse.ArgumentParser(description="PyTorch MNIST Example")
+    parser = argparse.ArgumentParser(description="Fashion MNIST")
     parser.add_argument(
         "--batch-size",
         type=int,
@@ -167,8 +191,16 @@ def main():
         help="train the Poincare ball curvature",
     )
 
+    parser.add_argument(
+        "--run-id",
+        type=str,
+        default="undef",
+        help="Run ID for saving the model",
+    )
+
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
+    target_score = 0.8
 
     torch.manual_seed(args.seed)
 
@@ -201,23 +233,52 @@ def main():
         **kwargs
     )
 
+    if args.save_model:             
+        os.makedirs("checkpoints", exist_ok=True)
+        os.makedirs(f"checkpoints/{args.run_id}", exist_ok=True)
+
     model = Net(args).to(device)
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
+    min_loss = float("inf")
+    best_epoch_hyp = 0
     for epoch in range(1, args.epochs + 1):
         train(args, model, device, train_loader, optimizer, epoch)
-        loss = test(args, model, device, test_loader)
+        loss, score = test(args, model, device, test_loader)
 
-        if args.save_model:            
-            import os
+        if loss < min_loss:
+            min_loss = loss
+            best_epoch_hyp = epoch
 
-            os.makedirs("checkpoints", exist_ok=True)
-            torch.save(model.state_dict(), f"checkpoints/fashion_mnist_cnn_{epoch}.pt")
+        if args.save_model:             
+            torch.save(model.state_dict(), f"checkpoints/{args.run_id}/fashion_hyp_cnn_{epoch}_{args.dim}d.pt")
+
+        if score >= target_score:
+            print(f"Reached {target_score*100}% accuracy at epoch {epoch}")
+            break
+
+    model = EuclideanNet(args).to(device)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+
+    min_loss = float("inf")
+    best_epoch_euc = 0
+    for epoch in range(1, args.epochs + 1):
+        train(args, model, device, train_loader, optimizer, epoch)
+        loss, score = test(args, model, device, test_loader)
+        if loss < min_loss:
+            min_loss = loss
+            best_epoch_euc = epoch
+
+        if args.save_model:             
+            torch.save(model.state_dict(), f"checkpoints/{args.run_id}/fashion_euc_cnn_{epoch}_{args.dim}d.pt")
+
+        if score >= target_score:
+            print(f"Reached {target_score*100}% accuracy at epoch {epoch}")
+            break
 
     if args.save_model:
-        import json
-        with open("fashion_args.json", "w") as f:
-                        json.dump(vars(args), f)
+        with open(f"checkpoints/{args.run_id}/fashion_args_{args.dim}d.json", "w") as f:
+            json.dump({**vars(args), "best_epoch_euc": best_epoch_euc, "best_epoch_hyp": best_epoch_hyp}, f)
 
 if __name__ == "__main__":
     main()
