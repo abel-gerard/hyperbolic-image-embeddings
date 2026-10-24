@@ -1,3 +1,5 @@
+## Run w/o gpu
+
 Create environment.
 ```sh
 conda create -n hie-mnist python=3.6
@@ -17,8 +19,9 @@ Should print out `1.0.0 0.2.1 False`
 Run the example.
 ```sh
 cd examples
-python mnist.py --epochs 10 --dim 2 --c 1.0 --no-cuda --save-model
+python mnist.py --epochs 50 --dim 3 --c 1.0 --lr 0.0003 --no-cuda --save-model
 ```
 
-TODO
-- [] Reproduce the experiment on MNIST+Omniglot with [experiment.ipynb](experiment.ipynb).
+## TODO
+- [x] Reproduce the experiment on MNIST+Omniglot with [mnist.ipynb](examples/mnist.ipynb).
+- [ ] Use better color map for visualization 
