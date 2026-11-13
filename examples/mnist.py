@@ -126,6 +126,38 @@ def test(args, model, device, test_loader):
     return test_loss, score
 
 
+def run(train_loader, test_loader, args, device, target_loss=None, mode="hyp", save_monotonic=True):
+    if mode not in ("hyp", "euc"):
+        raise ValueError("Invalid mode")
+
+    if mode == "hyp":
+        model = Net(args).to(device)
+    else:
+        model = EuclideanNet(args).to(device)
+
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+
+    min_loss = float("inf")
+    best_epoch = 0
+    for epoch in range(1, args.epochs + 1):
+        train(args, model, device, train_loader, optimizer, epoch)
+        loss, _ = test(args, model, device, test_loader)
+        decreased = loss < min_loss
+
+        if decreased:
+            min_loss = loss
+            best_epoch = epoch
+
+        if args.save_model and (not save_monotonic or decreased):
+            torch.save(model.state_dict(), f"checkpoints/{args.run_id}/mnist_{mode}_cnn_{epoch}_{args.dim}d.pt")
+
+        if target_loss is not None and loss < target_loss:
+            print(f"Target loss of {target_loss:.6f} reached")
+            break
+
+    return best_epoch, min_loss
+   
+
 def main():
     # Training settings
     parser = argparse.ArgumentParser(description="PyTorch MNIST Example")
@@ -179,6 +211,12 @@ def main():
     )
 
     parser.add_argument(
+        "--run-euclidean",
+        action="store_true",
+        default=False
+    )
+
+    parser.add_argument(
         "--c", type=float, default=1.0, help="Curvature of the Poincare ball"
     )
     parser.add_argument(
@@ -206,7 +244,6 @@ def main():
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
-    target_score = 0.95
 
     torch.manual_seed(args.seed)
 
@@ -243,48 +280,16 @@ def main():
         os.makedirs("checkpoints", exist_ok=True)
         os.makedirs(f"checkpoints/{args.run_id}", exist_ok=True)
 
-    model = Net(args).to(device)
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    best_epoch_hyp, _ = run(train_loader, test_loader, args, device, mode="hyp")
+    appended_args = {**vars(args), "best_epoch_hyp": best_epoch_hyp}
 
-    min_loss = float("inf")
-    best_epoch_hyp = 0
-    for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, optimizer, epoch)
-        loss, score = test(args, model, device, test_loader)
-
-        if loss < min_loss:
-            min_loss = loss
-            best_epoch_hyp = epoch
-
-        if args.save_model:             
-            torch.save(model.state_dict(), f"checkpoints/{args.run_id}/mnist_hyp_cnn_{epoch}_{args.dim}d.pt")
-
-        if score >= target_score:
-            print(f"Reached {target_score*100}% accuracy at epoch {epoch}")
-            break
-
-    model = EuclideanNet(args).to(device)
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
-
-    min_loss = float("inf")
-    best_epoch_euc = 0
-    for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, optimizer, epoch)
-        loss, score = test(args, model, device, test_loader)
-        if loss < min_loss:
-            min_loss = loss
-            best_epoch_euc = epoch
-
-        if args.save_model:             
-            torch.save(model.state_dict(), f"checkpoints/{args.run_id}/mnist_euc_cnn_{epoch}_{args.dim}d.pt")
-
-        if score >= target_score:
-            print(f"Reached {target_score*100}% accuracy at epoch {epoch}")
-            break
+    if args.run_euclidean:
+        best_epoch_euc, _ = run(train_loader, test_loader, args, device, mode="euc")
+        appended_args["best_epoch_euc"] = best_epoch_euc
 
     if args.save_model:
         with open(f"checkpoints/{args.run_id}/mnist_args_{args.dim}d.json", "w") as f:
-            json.dump({**vars(args), "best_epoch_euc": best_epoch_euc, "best_epoch_hyp": best_epoch_hyp}, f)
+            json.dump(appended_args, f)
 
 if __name__ == "__main__":
     main()

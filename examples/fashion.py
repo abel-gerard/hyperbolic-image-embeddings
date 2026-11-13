@@ -21,10 +21,11 @@ import hyptorch.nn as hypnn
 class Net(nn.Module):
     def __init__(self, args):
         super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(1, 20, 5, 1)
-        self.conv2 = nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = nn.Linear(4 * 4 * 50, 500)
-        self.fc2 = nn.Linear(500, args.dim)
+        self.conv1 = nn.Conv2d(1, 32, 5, 1)
+        self.conv2 = nn.Conv2d(32, 64, 5, 1)
+        self.fc1 = nn.Linear(4 * 4 * 64, 1024)
+        self.do1 = nn.Dropout(0.4)
+        self.fc2 = nn.Linear(1024, args.dim)
         self.tp = hypnn.ToPoincare(
             c=args.c, train_x=args.train_x, train_c=args.train_c, ball_dim=args.dim
         )
@@ -32,11 +33,12 @@ class Net(nn.Module):
 
     def embed(self, x):
         x = F.relu(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
+        x = F.max_pool2d(x, 2, stride=2)
         x = F.relu(self.conv2(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4 * 4 * 50)
+        x = F.max_pool2d(x, 2, stride=2)
+        x = x.view(-1, 4 * 4 * 64)
         x = F.relu(self.fc1(x))
+        x = self.do1(x)
         x = self.fc2(x)
         x = self.tp(x)
         return x
@@ -48,10 +50,11 @@ class Net(nn.Module):
 class EuclideanNet(nn.Module):
     def __init__(self, args):
         super(EuclideanNet, self).__init__()
-        self.conv1 = nn.Conv2d(1, 20, 5, 1)
-        self.conv2 = nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = nn.Linear(4 * 4 * 50, 500)
-        self.fc2 = nn.Linear(500, args.dim)
+        self.conv1 = nn.Conv2d(1, 32, 5, 1)
+        self.conv2 = nn.Conv2d(32, 64, 5, 1)
+        self.fc1 = nn.Linear(4 * 4 * 64, 1024)
+        self.do1 = nn.Dropout(0.4)
+        self.fc2 = nn.Linear(1024, args.dim)
         self.classifier = nn.Linear(args.dim, 10)
 
     def embed(self, x):
@@ -59,8 +62,9 @@ class EuclideanNet(nn.Module):
         x = F.max_pool2d(x, 2, 2)
         x = F.relu(self.conv2(x))
         x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4 * 4 * 50)
+        x = x.view(-1, 4 * 4 * 64)
         x = F.relu(self.fc1(x))
+        x = self.do1(x)
         x = self.fc2(x)
         return x
 
@@ -200,7 +204,7 @@ def main():
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
-    target_score = 0.8
+    target_score = 0.9
 
     torch.manual_seed(args.seed)
 

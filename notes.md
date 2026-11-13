@@ -27,4 +27,5 @@ python mnist.py --epochs 50 --dim 3 --c 1.0 --lr 0.0003 --no-cuda --save-model
 - [ ] Use better color map for visualization.
 - [ ] Compute $\delta_\text{rel}$.
 - [ ] Reproduce experiment on different dataset.
-- [ ] Explore classification with UMAP representation.
+- [x] Explore classification with UMAP representation.
+- [ ] Interpolate inputs or label smoothing.
