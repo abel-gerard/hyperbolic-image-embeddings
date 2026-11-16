@@ -17,7 +17,9 @@ nvidia-smi
 # python fashion.py --epochs 30 --dim 4 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
 # python fashion.py --epochs 30 --dim 8 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
 
-python mnist.py --epochs 100 --dim 2 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
-python mnist.py --epochs 100 --dim 8 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
-python mnist.py --epochs 100 --dim 16 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
-python mnist.py --epochs 100 --dim 32 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+# python mnist.py --epochs 100 --dim 2 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+# python mnist.py --epochs 100 --dim 8 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+# python mnist.py --epochs 100 --dim 16 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+# python mnist.py --epochs 100 --dim 32 --c 1.0 --lr 0.0001 --save-model --run-id "$SLURM_JOB_ID"
+
+python mnist_vae.py --epochs 50 --dim 32 --lr 0.01 --save-model --run-id "$SLURM_JOB_ID"
